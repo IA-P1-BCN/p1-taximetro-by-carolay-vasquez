@@ -1,7 +1,13 @@
 import threading
 import time
+import logging
+
 
 from . import config
+
+
+logger = logging.getLogger(__name__)
+
 
 
 STATE_STOPPED = "stopped"
@@ -13,6 +19,7 @@ def rate_for_state(state: str) -> float:
         return config.RATE_STOPPED
     if state == STATE_MOVING:
         return config.RATE_MOVING
+    logger.error("Unknown state requested: %s", state)
     raise ValueError(f"Unknown state: {state!r}")
 
 
@@ -39,17 +46,23 @@ class Ride:
         self._stop_event.clear()
         self._thread = threading.Thread(target=self._accumulate, daemon=True)
         self._thread.start()
+        logger.info("Ride started")
 
     def change_state(self, new_state: str):
         #Change the taxi's current state
         with self._lock:
+            old_state = self.state
             self.state = new_state
+        logger.info("State changed: %s -> %s", old_state, new_state)
 
     def finish(self) -> float:
         #Stop the ride, wait for the background thread to fully stop and return the final fare
         self._stop_event.set()
         self._thread.join()
         self.active = False
+        logger.info(
+            "Ride finished: duration=%.1fs fare=%.2f", self.duration_seconds(), self.fare
+        )
         return self.fare
 
     def duration_seconds(self) -> float:

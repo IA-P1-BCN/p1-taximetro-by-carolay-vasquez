@@ -1,7 +1,10 @@
 import threading
 import time
+import logging
  
 from . import core
+
+logger = logging.getLogger(__name__)
  
 STATUS_INTERVAL_SECONDS = 2.5
 
@@ -35,7 +38,7 @@ def show_instructions():
 
 
 def ride_loop(ride: core.Ride):
-    """Handles commands while a single ride is active."""
+    #Handles commands while a single ride is active.
     print("\nCarrera iniciada. Estado inicial: parado.")
     status_thread = threading.Thread(
         target=_print_status_periodically, args=(ride,), daemon=True
@@ -55,11 +58,14 @@ def ride_loop(ride: core.Ride):
                 f"TOTAL A COBRAR: {total:.2f} EUR\n"
             )
         else:
+            logger.warning("Unrecognized command during ride: %r", command)
             print("Comando no reconocido. Usa 'p', 'm' o 'fin'.")
 
 
+
 def main():
-    """Entry point for the whole CLI: the outer loop between rides."""
+    #Entry point for the whole CLI: the outer loop between rides.
+    logger.info("Application started")
     show_instructions()
     while True:
         command = input("> ").strip().lower()
@@ -68,7 +74,9 @@ def main():
             ride.start()
             ride_loop(ride)
         elif command == "salir":
+            logger.info("Application closed by user")
             print("Cerrando el taximetro. Buen turno.")
             break
         else:
+            logger.warning("Unrecognized command: %r", command)
             print("Comando no reconocido. Usa 'iniciar' o 'salir'.")

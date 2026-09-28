@@ -1,14 +1,14 @@
-# Entorno virtual
+# Virtual environment
 venv/
 .venv/
 env/
 
-# Cache y bytecode de Python
+# Python cache and bytecode
 __pycache__/
 *.pyc
 *.pyo
 
-# Tests y cobertura
+# Tests and coverage
 .pytest_cache/
 .coverage
 htmlcov/
@@ -24,6 +24,9 @@ Thumbs.db
 # Variables de entorno
 .env
 
-# Base de datos local
+# DB local
 *.db
 *.sqlite3
+
+# Runtime logs
+*.log
