@@ -1,12 +1,16 @@
 import threading
 import time
 import logging
- 
+import datetime
+
+
 from . import core
+from . import history
+
 
 logger = logging.getLogger(__name__)
  
-STATUS_INTERVAL_SECONDS = 2.5
+STATUS_INTERVAL_SECONDS = 3
 
 
 def _print_status_periodically(ride: core.Ride):
@@ -26,8 +30,9 @@ def show_instructions():
     print(" " * 15 + "¡Bienvenido al TAXIMETRO!")
     print("=" * 60)
     print("Fuera de una carrera:")
-    print("  iniciar -> Iniciar una nueva carrera")
-    print("  salir   -> Cerrar el programa")
+    print("  iniciar   -> Iniciar una nueva carrera")
+    print("  historial -> Ver el historial de carreras registradas")
+    print("  salir     -> Cerrar el programa")
     print()
     print("Durante una carrera:")
     print("  p       -> Cambiar a estado PARADO")
@@ -53,14 +58,34 @@ def ride_loop(ride: core.Ride):
         elif command == "fin":
             total = ride.finish()
             duration = ride.duration_seconds()
+            history.save({
+                "date": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                "duration_seconds": round(duration, 1),
+                "fare": round(total, 2),
+            })
             print(
                 f"\nCarrera finalizada. Duracion: {duration:.0f}s | "
                 f"TOTAL A COBRAR: {total:.2f} EUR\n"
             )
         else:
             logger.warning("Unrecognized command during ride: %r", command)
-            print("Comando no reconocido. Usa 'p', 'm' o 'fin'.")
+            print("Comando no reconocido. Pulsa:\n  'p'       -> Cambiar a estado PARADO\n  'm'       -> Cambiar a estado EN MOVIMIENTO\n  'fin'     -> Finalizar la carrera y mostrar el importe total")
 
+
+def show_history():
+    #Print every ride recorded so far, oldest first
+    records = history.load()
+    if not records:
+        print("No hay carreras registradas todavia.")
+        return
+    print(f"\nHistorial de carreras ({len(records)} en total):")
+    for record in records:
+        print(
+            f"  {record['date']} | "
+            f"duracion: {record['duration_seconds']:.0f}s | "
+            f"importe: {record['fare']:.2f} EUR"
+        )
+    print()
 
 
 def main():
@@ -73,10 +98,12 @@ def main():
             ride = core.Ride()
             ride.start()
             ride_loop(ride)
+        elif command == "historial":
+            show_history()
         elif command == "salir":
             logger.info("Application closed by user")
             print("Cerrando el taximetro. Buen turno.")
             break
         else:
             logger.warning("Unrecognized command: %r", command)
-            print("Comando no reconocido. Usa 'iniciar' o 'salir'.")
+            print("Comando no reconocido. Usa 'iniciar', 'historial' o 'salir'.")

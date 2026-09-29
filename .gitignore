@@ -30,3 +30,6 @@ Thumbs.db
 
 # Runtime logs
 *.log
+
+# Ride history (generated at runtime, per machine)
+history.json
